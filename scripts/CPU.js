@@ -1,5 +1,4 @@
 export default class CPU {
-
 	constructor(memToLoad, displayOut) {
 		//Create 16 8-bit general purpose registers
 		//VF (The 16th register) is used for flags
@@ -12,7 +11,7 @@ export default class CPU {
 		this.loadMem(memToLoad);
 		this.loadDisp(displayOut);
 		this.reset();
-	} 
+	}
 
 	reset() {
 		//Clear all registers
@@ -34,8 +33,11 @@ export default class CPU {
 		this.DT = 0;
 		//The sound timer
 		this.ST = 0;
+
 		//The instruction register
 		this.IR = this.Mem.read(this.PC);
+		//The keyPort reigster;
+		this.keyPort = 0;
 
 		//Instruction argument buffers
 		//3 nibble literal
@@ -61,6 +63,17 @@ export default class CPU {
 		this.Disp = displayOut;
 	}
 
+	updateTimer() {
+		if (this.DT > 0){
+			this.DT--;
+		}
+	}
+
+	updateKeyPort(keyNum, pressed) {
+		if (pressed === 1) this.keyPort |= (1 << keyNum);
+		if (pressed === 0) this.keyPort &= ~(1 << keyNum);
+	}
+
 	runInstruction(instruction) {
 		//Instruction Decode
 		this.instructionFunction = this.decodeInstruction(instruction);
@@ -70,8 +83,8 @@ export default class CPU {
 
 	stepInstruction() {
 		//Instruction Fetch
-		this.IR = this.Mem.read(this.PC) << 8;
-		this.IR |= this.Mem.read(this.PC+1);
+		this.IR = (this.Mem.read(this.PC) << 8);
+		this.IR |= this.Mem.read(this.PC + 1);
 		this.PC += 2;
 		//Instruction Decode & Execute
 		this.runInstruction(this.IR);
@@ -98,7 +111,8 @@ export default class CPU {
 	this.RND,
 	this.DRW,
 	{0x9E: this.SKP, 0xA1: this.SKNP, nibbles: 2},
-	{0x1E: this.ADDi, 0x55: this.LDir, 0x65: this.LDri, nibbles: 2}
+	{0x07: this.LDrd, 0x0A: this.LDrk, 0x15: this.LDdr, 0x18: this.LDsr, 0x1E: this.ADDi,
+	 0x29: this.LDis, 0x33: this.LDbr, 0x55: this.LDir, 0x65: this.LDri, nibbles: 2}
 	];
 
 	decodeInstruction(instruction) {
@@ -132,49 +146,77 @@ export default class CPU {
 	}
 
 	invalidInstruction(){
+		//WIP ACTUAL ERROR HANDELING
 		console.log('UHoh!');
 	}
 
 	//Actual instruction implementations
+	//It may be ugly, but it sure does work!
+	//These are all pretty self explanitory
+	//Check the CHIP8 technical reference for info on the instructions themselves
 	SYS()	{/*Error WIP*/}
-	CLS()	{this.Disp.clear();}
-	//WIP ADJUST CALL STACK DEPTH
-	RET()	{this.SP--; if (this.SP < 0){/*Error WIP*/}; this.PC = this.S[this.SP];}
-	JPi()	{this.PC = this.nnn;}
-	//WIP ADJUST CALL STACK DEPTH
-	CALL()	{this.S[this.SP] = this.PC; this.SP++; if (this.SP > 15){/*Error WIP*/}; this.PC = this.nnn;}
-	SEb()	{if (this.V[this.x] === this.kk) this.PC += 2;}
-	SNEb()	{if (this.V[this.x] != this.kk) this.PC += 2;}
-	SEr()	{if (this.V[this.x] === this.V[this.y]) this.PC += 2;}
-	LDb()	{this.V[this.x] = this.kk;}
-	ADDb()	{this.V[this.x] += this.kk;}
-	LDr()	{this.V[this.x] = this.V[this.y];}
-	OR()	{this.V[this.x] |= this.V[this.y];}
-	AND()	{this.V[this.x] &= this.V[this.y];}
-	XOR()	{this.V[this.x] ^= this.V[this.y];}
-	//WIP ADD CARY FLAG
-	ADDr()	{this.V[this.x] += this.V[this.y];}
-	SUB()	{this.V[0xF] = 0; if (this.V[this.x] > this.V[this.y]) this.V[0xF] = 1; this.V[this.x] -= this.V[this.y];}
-	//WIP ADD OPTIONS FOR CLASSIC SHIFT BEHAVIOR
-	SHR()	{this.V[0xF] = (this.V[this.x] & 0x1); this.V[this.x] = this.V[this.x] >> 1;}
-	SUBN()	{this.V[0xF] = 0; if (this.V[this.y] > this.V[this.x]) this.V[0xF] = 1; this.V[this.y] -= this.V[this.x];}
-	//WIP ADD OPTIONS FOR CLASSIC SHIFT BEHAVIOR
-	SHL()	{this.V[0xF] = (this.V[this.x] & 0x8) >> 8; this.V[this.x] = this.V[this.x] << 1;}
-	SNEr()	{if (this.V[this.x] != this.V[this.y]) this.PC += 2;}
-	LDi()	{this.I = this.nnn;}
-	JPr()	{this.PC = this.nnn + this.V[0x0];}
-	//WIP IMPLEMENT ACTUAL RANDOMNESS
-	RND()	{this.V[this.x] = 60 & this.kk;}
-	DRW()	{this.V[0xF] = this.Disp.drawSprite(this.V[this.x], this.V[this.y], this.n, this.I);}
-	SKP()	{}
-	SKNP()	{}
-	LDrd()	{}
-	LDrk()	{}
-	LDdr()	{}
-	LDsr()	{}
-	ADDi()	{this.I += this.V[this.x]; this.I &= 0xFFF;}
-	LDis()	{}
-	LDbr()	{}
-	LDir()	{}
-	LDri()	{}
+	CLS()	{ this.Disp.clear(); }
+	//WIP ADJUST CALL STACK DEPTH AND PROPER ERROR THROWING
+	RET()	{ this.SP--; if (this.SP < 0) console.log("ERROR"); this.PC = this.S[this.SP]; }
+	JPi()	{ this.PC = this.nnn; }
+	//WIP ADJUST CALL STACK DEPTH AND PROPER ERROR THROWING
+	CALL()	{ this.S[this.SP] = this.PC; this.SP++; if (this.SP > 15) console.log("ERROR"); this.PC = this.nnn; }
+	SEb()	{ if (this.V[this.x] === this.kk) this.PC += 2; }
+	SNEb()	{ if (this.V[this.x] != this.kk) this.PC += 2; }
+	SEr()	{ if (this.V[this.x] === this.V[this.y]) this.PC += 2; }
+	LDb()	{ this.V[this.x] = this.kk; }
+	ADDb()	{ this.V[this.x] += this.kk; }
+	LDr()	{ this.V[this.x] = this.V[this.y]; }
+	OR()	{ this.V[this.x] |= this.V[this.y]; }
+	AND()	{ this.V[this.x] &= this.V[this.y]; }
+	XOR()	{ this.V[this.x] ^= this.V[this.y]; }
+	ADDr()	{ this.V[0xF] = 0; let sum = this.V[this.x] + this.V[this.y]; if (sum > 0xFF) this.V[0xF] = 1; this.V[this.x] = sum; }
+	SUB()	{ this.V[0xF] = 0; if (this.V[this.x] > this.V[this.y]) this.V[0xF] = 1; this.V[this.x] -= this.V[this.y]; }
+	//WIP ADD OPTIONS FOR DIFFRENT SHIFT BEHAVIOR
+	SHR()	{ this.V[0xF] = this.V[this.x] & 0x1; this.V[this.x] = this.V[this.x] >> 1; }
+	SUBN()	{ this.V[0xF] = 0; if (this.V[this.y] > this.V[this.x]) this.V[0xF] = 1; this.V[this.y] -= this.V[this.x]; }
+	//WIP ADD OPTIONS FOR DIFFRENT SHIFT BEHAVIOR
+	SHL()	{ this.V[0xF] = (this.V[this.x] & 0x8) >> 8; this.V[this.x] = this.V[this.x] << 1; }
+	SNEr()	{ if (this.V[this.x] != this.V[this.y]) this.PC += 2; }
+	LDi()	{ this.I = this.nnn; }
+	//WIP ADD OPTIONS FOR DIFFRENT JUMP BEHVIORS
+	JPr()	{ this.PC = this.nnn + this.V[0x0];}
+	RND()	{ this.V[this.x] = Math.floor(Math.random() * 256) & this.kk; }
+	DRW()	{ this.V[0xF] = this.Disp.drawSprite(this.V[this.x], this.V[this.y], this.n, this.I); }
+	SKP()	{ if ((this.keyPort & (1 << (this.V[this.x] & 0xF))) != 0) this.PC += 2; }
+	SKNP()	{ if ((this.keyPort & (1 << (this.V[this.x] & 0xF))) === 0) this.PC += 2; }
+	LDrd()	{ this.V[this.x] = this.DT; }
+	//WIP ADD ACTUAL WARNING ALSO LESS UGLY SOLUTION
+	LDrk()	{
+		if (this.keyPort === 0){
+			console.log("WAITING FOR KEYPUSH!");
+			this.PC -= 2;
+		} else {
+			for (let i = 0; i < 16; i++){
+				if (this.keyPort & (1 << i)){
+					this.V[this.x] = i;
+					break;
+				}
+			}
+		}
+	}
+	LDdr()	{ this.DT = this.V[this.x]; }
+	LDsr()	{ this.ST = this.V[this.x]; }
+	//WIP ADD OPTIONS FOR DIFFRENT OVERFLOW BEHVIORS
+	ADDi()	{ this.I += this.V[this.x]; this.I &= 0xFFF; }
+	LDis()	{ this.I = (this.V[this.x] & 0xF) * 5; }
+	LDbr()	{
+		let bcdVal = this.V[this.x];
+		let modVal = bcdVal % 10;
+		bcdVal -= modVal;
+		this.Mem.write(this.I+2, modVal);
+		modVal = bcdVal % 100;
+		bcdVal -= modVal;
+		this.Mem.write(this.I+1, modVal/10);
+		this.Mem.write(this.I, bcdVal/100);
+	}
+	//WIP ADD OPTIONS FOR DIFFRENT INCREMENT BEHVIORS
+	LDir()	{ for (let i = 0; i <= this.x; i++) this.Mem.write(this.I+i, this.V[i]); }
+	//WIP ADD OPTIONS FOR DIFFRENT INCREMENT BEHVIORS
+	LDri()	{ for (let i = this.x; i >= 0; i--) this.V[i] = this.Mem.read(this.I+i); }
 }
