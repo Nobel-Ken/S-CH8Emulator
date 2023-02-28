@@ -1,20 +1,132 @@
 <!DOCTYPE HTML>
 <html>
+  <head>
+    <title>yetAnother Chip8 Emulator</title>
+    <link rel="icon" href="./images/favicon.png">
 
-<body>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
-  <p>Test Page</p>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
-  <script type="module" src="./scripts/main.js"></script>
-  <canvas width="512" height="256" id="canvas"></canvas>
-  <style>
-      canvas {
-        border: 1px solid black;
-      }
-  </style>
+    <script type="module" src="./scripts/main.js"></script>
 
-  <p>Test Page</p>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" />
+  </head>
 
-</body>
-
+  <body style="background-color: rgb(48, 25, 52); padding: 1.5rem;">
+    <!-- Top Logo Area -->
+    <div class="row">
+      <div class="col-lg-12">
+        <img src="./images/Chip8logo.png" alt="placeholder" width="500">
+        <!-- Nifty github corner thing made using https://codepen.io/Rplus/pen/wKZOBo -->
+        <a class="github-corner" href="https://github.com/Nobel-Ken/yetAnotherChip8" title="Fork me on GitHub"><svg width="120" height="120" viewbox="0 0 250 250"><title>Fork me on GitHub</title><path d="M0 0h250v250"></path><path class="octo-arm" d="M127.4 110c-14.6-9.2-9.4-19.5-9.4-19.5 3-7 1.5-11 1.5-11-1-6.2 3-2 3-2 4 4.7 2 11 2 11-2.2 10.4 5 14.8 9 16.2" fill="currentColor" style="transform-origin:130px 110px"></path><path class="octo-body" d="M113.2 114.3s3.6 1.6 4.7.6l15-13.7c3-2.4 6-3 8.2-2.7-8-11.2-14-25 3-41 4.7-4.4 10.6-6.4 16.2-6.4.6-1.6 3.6-7.3 11.8-10.7 0 0 4.5 2.7 6.8 16.5 4.3 2.7 8.3 6 12 9.8 3.3 3.5 6.7 8 8.6 12.3 14 3 16.8 8 16.8 8-3.4 8-9.4 11-11.4 11 0 5.8-2.3 11-7.5 15.5-16.4 16-30 9-40 .2 0 3-1 7-5.2 11l-13.3 11c-1 1 .5 5.3.8 5z" fill="currentColor"></path></svg><style> .github-corner svg{position:absolute;right:0;top:0;color:#000000;fill:#ffffff;}.github-corner:hover .octo-arm{animation:octocat-wave .56s;}@keyframes octocat-wave{0%, 100%{transform:rotate(0);}20%, 60%{transform:rotate(-20deg);}40%, 80%{transform:rotate(10deg);}}</style></a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-4 pt-5 pb-0 px-4">
+        <h1 style="color: rgb(255, 255, 255);">How To Use</h1>
+        <p style="color: rgb(255, 255, 255);">
+        Step 1. Load a built-in ROM from the drop down menu, or select your own by uploading a file. </br>
+        Step 2. Press the green play icon to start the game. </br>
+        Step 3. If you run into any emulation issues, try changing the emulation settings using the settings drop down menu.
+        </p>
+        <h1 style="color: rgb(255, 255, 255);">Controls / About Game</h1>
+        <p style="color: rgb(255, 255, 255);" id="controlsBodyText"></p>
+      </div>
+      <!-- Canvas and Rom and Settings -->
+      <div class="col-lg-8 pt-5 pb-0 px-4">
+        <!-- Rom Selection Area -->
+        <div>
+          <!-- Select Included ROM -->
+          <select class="form-select form-select-lg mb-3 d-inline" id="includedRomSelector" style="width: 230px;">
+            <option value="Invalid" selected>Choose built-in rom</option>
+            <option value="Tetris">Tetris</option>
+            <option value="Astrododge">Astrododge</option>
+            <option value="Breakout">Breakout</option>
+            <option value="Landing">Lunar Lander</option>
+            <option value="Pong">Pong</option>
+            <option value="Pong2">Pong (2 Player)</option>
+            <option value="TicTacToe">TicTacToe (2 Player)</option>
+            <option value="SpaceInvaders">Space Invaders</option>
+          </select>
+          <button type="button" class="btn text-white mb-1 d-inline" style="width: 50px;">OR</button>
+          <!-- Upload ROM -->
+          <input class="form-control form-control-lg mb-3 d-inline" style="width: 230px;" id="uploadedRomSelector" type="file">
+        </div>
+        <!-- Canvas and Buttons -->
+        <button type="button" class="btn btn-success btn-lg mt-1 mb-2 ml-0 mr-1" id="startEmu"><i class="fas fa-play"></i></button>
+        <button type="button" class="btn btn-danger btn-lg mt-1 mb-2 ml-1 mr-1" id="pauseEmu"><i class="fas fa-pause"></i></button>
+        <button type="button" class="btn btn-primary btn-lg mt-1 mb-2 ml-1 mr-1" id="muteSound"><i class="fas fa-volume-up"></i></button>
+        <canvas width="768" height="384" id="mainCanvas" style="border: 1px solid black; display: block;"></canvas>
+        <!-- Built-In Settings Dropdown -->
+        <p>
+          <button class="btn btn-primary btn-lg mt-4 dropdown-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#settingsMenu" aria-expanded="false" aria-controls="settingsMenu">
+            Emulation Settings
+          </button>
+        </p>
+        <div class="collapse" id="settingsMenu">
+          <!-- Actual Settings -->
+          <div class="card text-white bg-dark card-body">
+            <button type="button" class="btn btn-success btn-lg m-2" id="applySettings">Apply Changes</button>
+            <hr class="hr" />
+            <h3>General Settings</h3>
+            <!-- Display Size Slider -->
+            <div class="row">
+              <div class="col-md-8">
+                <label class="form-check-label"><b>Display Size</b></label>
+                <p class="lead mb-0" id="displaySliderIndicator">12x</p>
+                <input type="range" min="1" max="16" value="12" class="form-range" id="displaySlider">
+              </div>
+            </div>
+            <!-- Emulation Speed Slider -->
+            <div class="row">
+              <div class="col-md-8">
+                <label class="form-check-label"><b>Emulation Speed</b></label>
+                <p class="lead mb-0" id="speedSliderIndicator">30 instructions per frame</p>
+                <input type="range" min="1" max="100" value="30" class="form-range" id="speedSlider">
+              </div>
+            </div>
+            <!-- Foreground Colour -->
+            <div>
+              <input class="form-control form-control-color" type="color" id="foregroundColourPicker" value="#ffffff">
+              <label class="form-label">Foreground Colour</label>
+            </div>
+            <!-- Background Colour -->
+            <div>
+              <input class="form-control form-control-color" type="color" id="backgroundColourPicker" value="#000000">
+              <label class="form-label">Background Colour</label>
+            </div>
+            <hr class="hr" />
+            <h3>Compatibility Settings</h3>
+            <h6>Only change these if you know what your doing.</h6>
+            <h6>Messing with these can subtly or not so subtly break your game.</h6>
+            <!-- Checkboxes -->
+            <input class="form-check-input" type="checkbox" value="0" id="cpuSettingsUpdater">
+            <label class="form-check-label">Bitshifting clobbers Vx (Value in Vy is shifted in Vx)</label>
+            <input class="form-check-input" type="checkbox" value="1" id="cpuSettingsUpdater">
+            <label class="form-check-label">Offset jump uses value in Vx instead of V0 for offset</label>
+            <input class="form-check-input" type="checkbox" value="2" id="cpuSettingsUpdater">
+            <label class="form-check-label">Index register overflow sets processor flag</label>
+            <input class="form-check-input" type="checkbox" value="3" id="cpuSettingsUpdater">
+            <label class="form-check-label">Save and load of registers adjust index register</label>
+            <input class="form-check-input" type="checkbox" value="0" id="displaySettingsUpdater">
+            <label class="form-check-label">Disable sprite wrap-around</label>
+            <hr class="hr" />
+            <h3>Debug Settings</h3>
+            <h6>Only change these if you REALLY know what your doing.</h6>
+            <h6>Messing with these WILL break your game BADLY.</h6>
+            <input class="form-check-input" type="checkbox" value="4" id="cpuSettingsUpdater">
+            <label class="form-check-label">Disable RNG (Register Vx is unchanged)</label>
+            <input class="form-check-input" type="checkbox" value="2" id="displaySettingsUpdater">
+            <label class="form-check-label">Disable Collisions (Processor flag is forced 0 after sprite draw)</label>
+            <input class="form-check-input" type="checkbox" value="1" id="displaySettingsUpdater">
+            <label class="form-check-label">Disable Screen Clear (Screen clear instruction is bypassed completly)</label>
+          </div>
+          <!-- ^^^Actual Settings^^^ -->
+        </div>
+        <!-- ^^^Built-In Settings Dropdown^^^ -->
+      </div>
+      <!-- ^^^Canvas and Rom and Settings^^^ -->
+    </div>
+  </body>
 </html>

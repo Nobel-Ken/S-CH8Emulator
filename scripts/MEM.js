@@ -1,5 +1,4 @@
 export default class MEMORY {
-
 	constructor() {
 		//Buffer to store memory state
 		this.memBuffer = new ArrayBuffer(4096);
@@ -9,22 +8,24 @@ export default class MEMORY {
 
 	loadRom(romToLoad) {
 		//Load fonts into memory buffer
+		if (romToLoad.byteLength > 0xE00) return false;
 		let romView = new Uint8Array(romToLoad);
-		for (let i = 0; i < romToLoad.byteLength; i++){
+		for (let i = 0; i < romToLoad.byteLength; i++) {
 			this.memView[i + 512] = romView[i];
 		}
 		this.loadFonts();
 	}
 
 	loadFonts() {
-		for (let i = 0; i < 80; i++){
+		//Load fonts into the first 80 bytes of memory
+		for (let i = 0; i < 80; i++) {
 			this.memView[i] = MEMORY.ogFontTable[i];
 		}
 	}
 
 	clearMem() {
 		//Fill memory buffer with 0's
-		for(let i = 0; i < 4096; i++){
+		for(let i = 0; i < 4096; i++) {
 			this.memView[i] = 0;
 		}
 	}
@@ -44,6 +45,8 @@ export default class MEMORY {
 		this.memView[address & 0xFFF] = (value & 0xFF);
 	}
 
+	//Font table for the built in CHIP8 hex font
+	//Each row is a single charachter
 	static ogFontTable = [
 		0xF0, 0x90, 0x90, 0x90, 0xF0, //0
 		0x20, 0x60, 0x20, 0x20, 0x70, //1

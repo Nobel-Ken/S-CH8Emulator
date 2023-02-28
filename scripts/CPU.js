@@ -1,5 +1,5 @@
 export default class CPU {
-	constructor(memToLoad, displayOut) {
+	constructor(memToLoad, displayOut, soundHandler, illegalOpcode = this.invalidInstruction) {
 		//Create 16 8-bit general purpose registers
 		//VF (The 16th register) is used for flags
 		this.Vbuffer = new ArrayBuffer(16);
@@ -7,17 +7,24 @@ export default class CPU {
 		//Create the stack, 16 16-bit entries
 		this.Sbuffer = new ArrayBuffer(32);
 		this.S = new Uint16Array(this.Sbuffer);
+		//Emulation config flags: index = what value of true will enable
+		//Using an array instead of an object because acsessing arrays-
+		//are faster than objects? Idk Im coming from C++
+		//0 = Bit-shifting clobber   1 = Offset jump Vx
+		//2 = Index overflow		 3 = Index increment
+		//4 = RNG disable
+		this.config = [false, false, false, false, false];
 		//Initalize systems
 		this.loadMem(memToLoad);
 		this.loadDisp(displayOut);
+		this.loadSound(soundHandler);
+		this.loadErrorFunc(illegalOpcode);
 		this.reset();
 	}
 
 	reset() {
 		//Clear all registers
-		for (let i = 0; i < 16; i++) {
-			this.V[i] = 0;
-		}
+		for (let i = 0; i < 16; i++) this.V[i] = 0;
 		//The 16-bit index register
 		this.I = 0;
 		//The program counter register, starts execution at 0x200
@@ -26,13 +33,9 @@ export default class CPU {
 		//The stack pointer register
 		this.SP = 0;
 		//Clear the stack
-		for (let i = 0; i < 16; i++) {
-			this.S[i] = 0;
-		}
+		for (let i = 0; i < 16; i++) this.S[i] = 0;
 		//The delay timer
 		this.DT = 0;
-		//The sound timer
-		this.ST = 0;
 
 		//The instruction register
 		this.IR = this.Mem.read(this.PC);
@@ -50,6 +53,7 @@ export default class CPU {
 		this.y = 0;
 		//right nibble
 		this.n = 0;
+
 	}
 
 	loadMem(memToLoad) {
@@ -63,8 +67,18 @@ export default class CPU {
 		this.Disp = displayOut;
 	}
 
+	loadSound(soundHandler) {
+		//Loads reference to sound handler
+		this.soundHandler = soundHandler;
+	}
+
+	loadErrorFunc(errorFunc) {
+		//Loads reference to invalid opcode handler
+		this.invalidOpFunc = errorFunc;
+	}
+
 	updateTimer() {
-		if (this.DT > 0){
+		if (this.DT > 0) {
 			this.DT--;
 		}
 	}
@@ -133,28 +147,29 @@ export default class CPU {
 		//For instructions that have a second opcode nibble
 		if (firstDecode.nibbles === 1) {
 			let secondDecode = firstDecode[instruction & 0x000F];
-			if (typeof secondDecode != 'undefined') return secondDecode;
+			if (secondDecode != undefined) return secondDecode;
 		}
 		//For instructions with three opcode nibble
 		else if (firstDecode.nibbles === 2) {
 			let secondDecode = firstDecode[instruction & 0x00FF];
-			if (typeof secondDecode != 'undefined') return secondDecode;
+			if (secondDecode != undefined) return secondDecode;
 		}
 		//Otherwise an invalid instruction has been reached
 		//SYS which isnt implemented also counts as an invalid instruction
-		return this.invalidInstruction;
+		return this.invalidOpFunc;
 	}
 
-	invalidInstruction(){
-		//WIP ACTUAL ERROR HANDELING
-		console.log('UHoh!');
+	invalidInstruction() {
+		//Defualt function for handeling illegal opcodes
+		//Just prints an error in the console
+		console.log("UHoh! Illegal Opcode!");
 	}
 
 	//Actual instruction implementations
 	//It may be ugly, but it sure does work!
 	//These are all pretty self explanitory
 	//Check the CHIP8 technical reference for info on the instructions themselves
-	SYS()	{/*Error WIP*/}
+	SYS()	{ this.invalidOpFunc(); }
 	CLS()	{ this.Disp.clear(); }
 	//WIP ADJUST CALL STACK DEPTH AND PROPER ERROR THROWING
 	RET()	{ this.SP--; if (this.SP < 0) console.log("ERROR"); this.PC = this.S[this.SP]; }
@@ -172,28 +187,31 @@ export default class CPU {
 	XOR()	{ this.V[this.x] ^= this.V[this.y]; }
 	ADDr()	{ this.V[0xF] = 0; let sum = this.V[this.x] + this.V[this.y]; if (sum > 0xFF) this.V[0xF] = 1; this.V[this.x] = sum; }
 	SUB()	{ this.V[0xF] = 0; if (this.V[this.x] > this.V[this.y]) this.V[0xF] = 1; this.V[this.x] -= this.V[this.y]; }
-	//WIP ADD OPTIONS FOR DIFFRENT SHIFT BEHAVIOR
-	SHR()	{ this.V[0xF] = this.V[this.x] & 0x1; this.V[this.x] = this.V[this.x] >> 1; }
-	SUBN()	{ this.V[0xF] = 0; if (this.V[this.y] > this.V[this.x]) this.V[0xF] = 1; this.V[this.y] -= this.V[this.x]; }
-	//WIP ADD OPTIONS FOR DIFFRENT SHIFT BEHAVIOR
-	SHL()	{ this.V[0xF] = (this.V[this.x] & 0x8) >> 8; this.V[this.x] = this.V[this.x] << 1; }
+	SHR()	{
+		if (this.config[0]) this.V[this.x] = this.V[this.y];
+		this.V[0xF] = this.V[this.x] & 0x1;
+		this.V[this.x] = this.V[this.x] >> 1; 
+	}
+	SUBN()	{ this.V[0xF] = 0; if (this.V[this.y] > this.V[this.x]) this.V[0xF] = 1; this.V[this.x] = this.V[this.y] - this.V[this.x]; }
+	SHL()	{
+		if (this.config[0]) this.V[this.x] = this.V[this.y];
+		this.V[0xF] = (this.V[this.x] & 0x8) >> 8;
+		this.V[this.x] = this.V[this.x] << 1;
+	}
 	SNEr()	{ if (this.V[this.x] != this.V[this.y]) this.PC += 2; }
 	LDi()	{ this.I = this.nnn; }
-	//WIP ADD OPTIONS FOR DIFFRENT JUMP BEHVIORS
-	JPr()	{ this.PC = this.nnn + this.V[0x0];}
-	RND()	{ this.V[this.x] = Math.floor(Math.random() * 256) & this.kk; }
+	JPr()	{ this.PC = this.nnn + this.V[0x0]; if (this.config[1]) this.PC = this.nnn + this.V[this.x]; }
+	RND()	{ if (!this.config[4]) this.V[this.x] = Math.floor(Math.random() * 256) & this.kk; }
 	DRW()	{ this.V[0xF] = this.Disp.drawSprite(this.V[this.x], this.V[this.y], this.n, this.I); }
 	SKP()	{ if ((this.keyPort & (1 << (this.V[this.x] & 0xF))) != 0) this.PC += 2; }
 	SKNP()	{ if ((this.keyPort & (1 << (this.V[this.x] & 0xF))) === 0) this.PC += 2; }
 	LDrd()	{ this.V[this.x] = this.DT; }
-	//WIP ADD ACTUAL WARNING ALSO LESS UGLY SOLUTION
 	LDrk()	{
-		if (this.keyPort === 0){
-			console.log("WAITING FOR KEYPUSH!");
+		if (this.keyPort === 0) {
 			this.PC -= 2;
 		} else {
-			for (let i = 0; i < 16; i++){
-				if (this.keyPort & (1 << i)){
+			for (let i = 0; i < 16; i++) {
+				if (this.keyPort & (1 << i)) {
 					this.V[this.x] = i;
 					break;
 				}
@@ -201,9 +219,13 @@ export default class CPU {
 		}
 	}
 	LDdr()	{ this.DT = this.V[this.x]; }
-	LDsr()	{ this.ST = this.V[this.x]; }
-	//WIP ADD OPTIONS FOR DIFFRENT OVERFLOW BEHVIORS
-	ADDi()	{ this.I += this.V[this.x]; this.I &= 0xFFF; }
+	LDsr()	{ this.soundHandler(this.V[this.x]); }
+	ADDi()	{
+		if (this.config[2]) this.V[0xF] = 0;
+		this.I += this.V[this.x];
+		if (this.config[2] && this.I > 0xFFF) this.V[0xF] = 1; 
+		this.I &= 0xFFF;
+	}
 	LDis()	{ this.I = (this.V[this.x] & 0xF) * 5; }
 	LDbr()	{
 		let bcdVal = this.V[this.x];
@@ -215,8 +237,12 @@ export default class CPU {
 		this.Mem.write(this.I+1, modVal/10);
 		this.Mem.write(this.I, bcdVal/100);
 	}
-	//WIP ADD OPTIONS FOR DIFFRENT INCREMENT BEHVIORS
-	LDir()	{ for (let i = 0; i <= this.x; i++) this.Mem.write(this.I+i, this.V[i]); }
-	//WIP ADD OPTIONS FOR DIFFRENT INCREMENT BEHVIORS
-	LDri()	{ for (let i = this.x; i >= 0; i--) this.V[i] = this.Mem.read(this.I+i); }
+	LDir()	{ 
+		for (let i = 0; i <= this.x; i++) this.Mem.write(this.I+i, this.V[i]);
+		if (this.config[3]) this.I += this.x;
+	}
+	LDri()	{ 
+		for (let i = this.x; i >= 0; i--) this.V[i] = this.Mem.read(this.I+i); 
+		if (this.config[3]) this.I -= this.x;
+	}
 }
