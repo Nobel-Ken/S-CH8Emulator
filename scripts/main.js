@@ -9,6 +9,12 @@ const mem = new MEMORY();
 const disp = new DISPLAY(mem, 12);
 const cpu = new CPU(mem, disp, handleSound, illegalOpcode);
 
+//Dectection script by Timothy Huang to see if your on mobile
+//If you are, give a prompt that controls wont work
+if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
+  alert("You seem to be viewing this site on a phone. Viewing this site on a computer/laptop is recommended as a keyboard is required for input to the emulator.");
+}
+
 //Global variables for various global things
 //Main system timer (60hz)
 let updateEmulation = undefined;
