@@ -9,7 +9,7 @@ const mem = new MEMORY();
 const disp = new DISPLAY(mem, 12);
 const cpu = new CPU(mem, disp, handleSound, illegalOpcode);
 
-//Dectection script by Timothy Huang to see if your on mobile
+//Detection script by Timothy Huang to see if your on mobile
 //If you are, give a prompt that controls wont work
 if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
   alert("You seem to be viewing this site on a phone. Viewing this site on a computer/laptop is recommended as a keyboard is required for input to the emulator.");
@@ -18,7 +18,7 @@ if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigat
 //Global variables for various global things
 //Main system timer (60hz)
 let updateEmulation = undefined;
-//Main audo context
+//Main audio context
 let audioContext = new AudioContext();
 //Flag for if sound is muted
 let muteFlag = 0;
@@ -27,9 +27,9 @@ let pauseFlag = 0;
 //Global emulation speed, we have an extra copy here-
 //so we can update it when the apply button is hit
 let emuSpeed = 30;
-//Buffer for the rom to load when the start button is clicked
+//Buffer for the ROM to load when the start button is clicked
 let romToLoad = undefined;
-//Name of the rom to load
+//Name of the ROM to load
 let romtoLoadName = undefined;
 
 //This is where the page elements are pulled and events are bound
@@ -63,7 +63,7 @@ const foregroundColourPicker = document.getElementById("foregroundColourPicker")
 const backgroundColourPicker = document.getElementById("backgroundColourPicker");
 
 //Sliders (in the settings menu) and their indicators
-//I am not afriad to make long lines of code ;)
+//I am not afraid to make long lines of code ;)
 const speedSlider = document.getElementById("speedSlider");
 const speedSliderIndicator = document.getElementById("speedSliderIndicator");
 const displaySlider = document.getElementById("displaySlider");
@@ -90,7 +90,7 @@ document.addEventListener('keyup', function(event) {
 });
 
 //Here be the functions that all those events call!
-//Function to load the rom and start the emulation
+//Function to load the ROM and start the emulation
 function startEmulation() {
 	pauseFlag = 0;
 	pauseEmuButton.classList.add("btn-danger");
@@ -163,7 +163,7 @@ function muteSound() {
 }
 
 //Not really happy with this, I really need to rewrite it!
-//WIP make envelope toggleable and just kinda make this more elgant
+//WIP make envelope toggle-able and just kinda make this more elegant
 function handleSound(length) {
 	if (muteFlag === 1) return;
 	//Create a new oscillator and connect a gain stage to it
@@ -175,13 +175,13 @@ function handleSound(length) {
 	osc.start(0);
 	//Ramp down the oscillator 
 	//On most Chip8 interpreters there is no such ramp-down envelope-
-	//but IMO this sounds way nicer than letting the sound die immediatly
+	//but IMO this sounds way nicer than letting the sound die immediately
 	gainStage.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + ((length/1000)*60));
 	//Stop the oscillator to prevent "phantom sound"
 	osc.stop(audioContext.currentTime + ((length/1000)*60));
 }
 
-//Load user uploaded rom into the global rom buffer
+//Load user uploaded ROM into the global ROM buffer
 //WIP rewrite this to be more elegant
 function loadUploadedRom(event) {
 	const file = uploadedRomSelector.files[0];
@@ -194,8 +194,8 @@ function loadUploadedRom(event) {
 	romtoLoadName = "Uploaded";
 }
 
-//Loads the rom based on its name. Depends on a specific directory-
-//structure --> ../roms/"name of rom".ch8
+//Loads the ROM based on its name. Depends on a specific directory-
+//structure --> ../roms/"name of ROM".ch8
 //It also updates the about game section with info about the game-
 //if a built in game is selected
 function loadBuiltInRom(romName) {
@@ -219,9 +219,9 @@ function updateEmulationState() {
 	disp.canvasDisplayUpdate(mainRenderContext);
 }
 
-//Not very happy with how this bit turned out, Im sure-
+//Not very happy with how this bit turned out, I'm sure-
 //there is a more elegant way to do it!
-//Updates cpu and display config flags based on the settings menu
+//Updates CPU and display config flags based on the settings menu
 //WIP make this more elegant
 function updateEmulatorSettings() {
 	//Display colour update

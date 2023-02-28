@@ -8,13 +8,13 @@ export default class CPU {
 		this.Sbuffer = new ArrayBuffer(32);
 		this.S = new Uint16Array(this.Sbuffer);
 		//Emulation config flags: index = what value of true will enable
-		//Using an array instead of an object because acsessing arrays-
-		//are faster than objects? Idk Im coming from C++
+		//Using an array instead of an object because accessing arrays-
+		//are faster than objects? Idk I'm coming from C++
 		//0 = Bit-shifting clobber   1 = Offset jump Vx
 		//2 = Index overflow		 3 = Index increment
 		//4 = RNG disable
 		this.config = [false, false, false, false, false];
-		//Initalize systems
+		//Initialize systems
 		this.loadMem(memToLoad);
 		this.loadDisp(displayOut);
 		this.loadSound(soundHandler);
@@ -39,7 +39,7 @@ export default class CPU {
 
 		//The instruction register
 		this.IR = this.Mem.read(this.PC);
-		//The keyPort reigster;
+		//The keyPort register;
 		this.keyPort = 0;
 
 		//Instruction argument buffers
@@ -155,19 +155,19 @@ export default class CPU {
 			if (secondDecode != undefined) return secondDecode;
 		}
 		//Otherwise an invalid instruction has been reached
-		//SYS which isnt implemented also counts as an invalid instruction
+		//SYS which isn't implemented also counts as an invalid instruction
 		return this.invalidOpFunc;
 	}
 
 	invalidInstruction() {
-		//Defualt function for handeling illegal opcodes
+		//Default function for handling illegal opcodes
 		//Just prints an error in the console
 		console.log("UHoh! Illegal Opcode!");
 	}
 
 	//Actual instruction implementations
 	//It may be ugly, but it sure does work!
-	//These are all pretty self explanitory
+	//These are all pretty self explanatory
 	//Check the CHIP8 technical reference for info on the instructions themselves
 	SYS()	{ this.invalidOpFunc(); }
 	CLS()	{ this.Disp.clear(); }

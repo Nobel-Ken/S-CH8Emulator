@@ -51,7 +51,7 @@ export default class DISPLAY {
 		console.log(finalOut);
 	}
 
-	//This code is VERY ugly aswell, but it works!
+	//This code is VERY ugly as well, but it works!
 	//WIP will fix soon
 	//Pay no attention to it!
 	canvasDisplayUpdate(canvasContext) {
@@ -76,7 +76,7 @@ export default class DISPLAY {
 		}
 	}
 
-	//Clears the screen buffer, pretty self explanitory how it works
+	//Clears the screen buffer, pretty self explanatory how it works
 	clear() {
 		if (this.config[1]) return;
 		for (let i = 0; i < 256; i++) {
@@ -91,7 +91,7 @@ export default class DISPLAY {
 	drawSprite(x, y, count, addr) {
 		//Flag for if pixels are overdrawn
 		let bitFlipped = 0;
-		//If sprite wrapping is disabled, dont draw the sprite if-
+		//If sprite wrapping is disabled, don't draw the sprite if-
 		//its position is outside the screen area
 		if (this.config[0] && x > 63) return;
 		if (this.config[0] && y > 31) return;
@@ -111,11 +111,11 @@ export default class DISPLAY {
 		for (let i = 0; i < count; i++) {
 			//Calculate the address of the screen buffer to write too
 			const displayAdr = xByteShift + ((y + i) << 3);
-			//Check for pixel overdraw (using bitwise AND)
+			//Check for pixel overdraw (using bit-wise AND)
 			if ((this.dispBuffer[displayAdr] & (this.Mem.read(addr+i) >> xBitShift)) != 0) bitFlipped = 1;
-			//Draw pixels to screen buffer (using bitwise XOR)
+			//Draw pixels to screen buffer (using bit-wise XOR)
 			this.dispBuffer[displayAdr] ^= (this.Mem.read(addr+i) >> xBitShift);
-			//We check if the next byte to draw is offscreen and skip drawing if it is
+			//We check if the next byte to draw is off-screen and skip drawing if it is
 			//If its not we repeat the last 2 steps
 			if ((xByteShift + 1) < 8) {
 				if ((this.dispBuffer[displayAdr + 1] & (this.Mem.read(addr+i) << (8-xBitShift)) & 0xFF) != 0) bitFlipped = 1;

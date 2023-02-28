@@ -2,10 +2,10 @@
 //Fun tid-bit is that all the descriptions here were written by ChatGPT :) (with minor edits)
 export const gameInfo = {
 Tetris:   `Tetris: You manipulate falling shapes called "tetrominoes" to create complete lines, which then disappear and earn you points. The game speeds up over time, challenging you to think quickly and react fast.
-			Q: Rotate Peice
+			Q: Rotate Piece
 			W: Move Left
 			E: Move Right
-			A: Drop Peice`,
+			A: Drop Piece`,
 SpaceInvaders: `Space Invaders: You control a spaceship at the bottom of the screen, shooting at rows of alien invaders as they slowly advance downward. The goal is to defeat all the aliens before they reach your ship.
 			W: Start/Shoot
 			Q: Move Left
@@ -31,7 +31,7 @@ TicTacToe:`TicTacToe: You play on a 3x3 grid, taking turns with another player t
 			①②③
 			ⓆⓌⒺ
 			ⒶⓈⒹ`,
-Astrododge: `Astrododge: You control a spaceship as asteroids come barraling towards you. Avoid the asteroids to gain points and play for a highscore.
+Astrododge: `Astrododge: You control a spaceship as asteroids come barrelling towards you. Avoid the asteroids to gain points and play for a high-score.
 			W: Start
 			2: Move Up
 			S: Move Down
