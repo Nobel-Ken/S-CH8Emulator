@@ -221,7 +221,6 @@ function updateEmulatorSettings() {
 	//Display colour update
 	disp.foregroundColour = foregroundColourPicker.value;
 	disp.backgroundColour = backgroundColourPicker.value;
-	console.log(foregroundColourPicker.value);
 	//Display size update
 	mainRender.width = displaySlider.value * 64;
 	mainRender.height = displaySlider.value * 32;
@@ -239,9 +238,4 @@ function updateEmulatorSettings() {
 			disp.config[configBoxes[i].value] = configBoxes[i].checked;
 		}
 	}
-}
-
-//LEFTOVER FROM DEBUGGING DELETE!
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
